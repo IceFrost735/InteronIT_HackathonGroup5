@@ -23,10 +23,22 @@ async function run() {
 
     let clonedCount = 0;
     
+    // Keep track of meshes we've already modified so we can clone them if shared
+    const processedMeshes = new Set();
+    
     // Iterate over all nodes in the scene
     for (const node of root.listNodes()) {
-        const mesh = node.getMesh();
+        let mesh = node.getMesh();
         if (mesh) {
+            
+            // If this mesh is shared (already processed by a previous node, like the Left side),
+            // we MUST clone it so the Right side can have its own independent materials!
+            if (processedMeshes.has(mesh)) {
+                mesh = mesh.clone();
+                node.setMesh(mesh);
+            }
+            processedMeshes.add(mesh);
+
             // For each primitive in the mesh
             for (const prim of mesh.listPrimitives()) {
                 const mat = prim.getMaterial();
@@ -45,7 +57,7 @@ async function run() {
         }
     }
     
-    console.log(`Cloned and renamed ${clonedCount} materials.`);
+    console.log(`Cloned and renamed ${clonedCount} materials. Total unique meshes: ${processedMeshes.size}`);
     
     await io.write('./public/models/zanatomy_split.glb', doc);
     console.log('Saved to zanatomy_split.glb');
