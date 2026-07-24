@@ -20,7 +20,7 @@ export default function App() {
 
                 <LeftPanel selectedRegion={selectedRegion} painData={painData} setSelectedRegion={setSelectedRegion} setPainData={setPainData} />
 
-                <Canvas3D setSelectedRegion={setSelectedRegion} />
+                <Canvas3D setSelectedRegion={setSelectedRegion} setPainData={setPainData} painData={painData} />
 
                 <RightPanel
                     selectedRegion={selectedRegion}

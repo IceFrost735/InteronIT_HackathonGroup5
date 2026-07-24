@@ -24,6 +24,10 @@ export default function ReportModal({ setShowReport, painData }) {
                     {/* Patient Info Section */}
                     <div className="patient-info-section">
                         <div className="info-group">
+                            <label>Patient ID:</label>
+                            <input type="text" placeholder="ID Number" />
+                        </div>
+                        <div className="info-group">
                             <label>Patient Name:</label>
                             <input type="text" value={patientName} onChange={e => setPatientName(e.target.value)} placeholder="Full Name" />
                         </div>
@@ -40,6 +44,17 @@ export default function ReportModal({ setShowReport, painData }) {
                     <hr className="report-divider" />
 
                     <h3>Pain Assessment</h3>
+
+                    {regions.length > 0 && (
+                        <div style={{ marginBottom: '15px', padding: '15px', background: 'rgba(244, 67, 54, 0.1)', borderRadius: '8px', borderLeft: '4px solid #f44336' }}>
+                            <strong>Most Severe Pain:</strong> {
+                                (() => {
+                                    const maxPain = regions.reduce((max, curr) => curr[1].severity > max[1].severity ? curr : max, regions[0]);
+                                    return `${maxPain[0]} (Severity: ${maxPain[1].severity}/10)`;
+                                })()
+                            }
+                        </div>
+                    )}
 
                     {regions.length === 0 ? (
                         <div className="report-empty">

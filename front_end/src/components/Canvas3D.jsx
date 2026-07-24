@@ -25,12 +25,13 @@ const INITIAL_HOTSPOTS = [
   { name: "Glutes", position: { x: 0, y: 9.27671463843435, z: -1.0236779427528382 } }
 ];
 
-export default function Canvas3D({ setSelectedRegion }) {
+export default function Canvas3D({ setSelectedRegion, setPainData, painData = {} }) {
 
     const mountRef = useRef(null);
     const viewerRef = useRef(null);
     const [hotspots, setHotspots] = useState(INITIAL_HOTSPOTS);
     const [panMode, setPanMode] = useState(false);
+    const [customDotMode, setCustomDotMode] = useState(false);
     const isPanning = useRef(false);
     const lastPos = useRef({ x: 0, y: 0 });
 
@@ -83,6 +84,60 @@ export default function Canvas3D({ setSelectedRegion }) {
         e.target.releasePointerCapture(e.pointerId);
     };
 
+    const handleCanvasClick = (e) => {
+        if (!customDotMode) return;
+        if (!viewerRef.current) return;
+        
+        const positionAndNormal = viewerRef.current.positionAndNormalFromPoint(e.clientX, e.clientY);
+        if (positionAndNormal) {
+            const { position } = positionAndNormal;
+            
+            // Find closest default hotspot
+            let closestSpot = INITIAL_HOTSPOTS[0];
+            let minDistance = Infinity;
+            
+            for (const spot of INITIAL_HOTSPOTS) {
+                const dist = Math.sqrt(
+                    Math.pow(spot.position.x - position.x, 2) +
+                    Math.pow(spot.position.y - position.y, 2) +
+                    Math.pow(spot.position.z - position.z, 2)
+                );
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    closestSpot = spot;
+                }
+            }
+
+            // Ensure unique names if multiple custom dots are near the same muscle
+            let baseName = `Custom (near ${closestSpot.name})`;
+            let customName = baseName;
+            let counter = 1;
+            while (hotspots.some(h => h.name === customName)) {
+                counter++;
+                customName = `${baseName} ${counter}`;
+            }
+            
+            const newHotspot = {
+                name: customName,
+                position: position,
+                isCustom: true
+            };
+            
+            setHotspots([...hotspots, newHotspot]);
+            setSelectedRegion(customName);
+            
+            // Instantly add to list of pains with default values
+            if (setPainData) {
+                setPainData(prev => ({
+                    ...prev,
+                    [customName]: { severity: 5, painType: "", notes: "", startDate: "", frequency: "" }
+                }));
+            }
+            
+            setCustomDotMode(false); // Turn off mode after placing one
+        }
+    };
+
     return (
 
         <main className="canvas-container" style={{ touchAction: 'none', overscrollBehavior: 'none', paddingLeft: '280px', paddingRight: '330px' }}>
@@ -116,6 +171,27 @@ export default function Canvas3D({ setSelectedRegion }) {
 
             </div>
 
+            <div style={{ position: 'absolute', top: '100px', right: '350px', zIndex: 50 }}>
+                <button 
+                    style={{ 
+                        background: customDotMode ? '#e63946' : '#20263d', 
+                        color: 'white', 
+                        border: 'none', 
+                        padding: '10px 15px', 
+                        borderRadius: '10px', 
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                        cursor: 'pointer',
+                        fontWeight: 'bold'
+                    }}
+                    onClick={() => {
+                        setCustomDotMode(!customDotMode);
+                        if (!customDotMode) setPanMode(false); // disable pan mode if enabling custom dot
+                    }}
+                >
+                    {customDotMode ? '📌 Click anywhere on body...' : '📌 Add Custom Dot'}
+                </button>
+            </div>
+
 
 
             <div
@@ -136,11 +212,12 @@ export default function Canvas3D({ setSelectedRegion }) {
                     ref={viewerRef}
                     src="/models/FinalBaseMesh.glb"
                     alt="3D model of human body"
-                    camera-controls
+                    camera-controls={!customDotMode}
                     shadow-intensity="1"
-                    style={{ width: '100%', height: '100%' }}
+                    style={{ width: '100%', height: '100%', cursor: customDotMode ? 'crosshair' : 'default' }}
+                    onClick={handleCanvasClick}
                 >
-                    {hotspots.map((spot, i) => (
+                    {hotspots.filter(spot => !spot.isCustom || painData[spot.name]).map((spot, i) => (
                         <button
                             key={`${i}-${spot.position.x}-${spot.position.y}`}
                             className="hotspot-dot"
