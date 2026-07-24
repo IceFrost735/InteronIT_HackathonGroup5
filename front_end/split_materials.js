@@ -2,7 +2,7 @@ import { Document, NodeIO } from '@gltf-transform/core';
 
 async function run() {
     const io = new NodeIO();
-    const doc = await io.read('./public/models/zanatomy1.glb');
+    const doc = await io.read('./public/models/zanatomycolored.glb');
     const root = doc.getRoot();
     
     // We want to keep the specific anatomical names (as they are medically distinct)
