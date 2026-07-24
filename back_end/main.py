@@ -4,7 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List
 import shutil
-
+from database import engine
+from sqlalchemy import text
 
 app = FastAPI()
 
@@ -23,5 +24,12 @@ app.add_middleware(
 
 @app.get("/")
 
-def test_root():
-    return {"message: this is a example"}
+def test_db():
+
+    with engine.connect() as conn:
+        result = conn.execute(text("SELECT 1"))
+        row = result.fetchone()
+
+    return {
+        "connected": row[0]
+    }

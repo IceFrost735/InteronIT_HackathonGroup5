@@ -1,4 +1,5 @@
 import "../css/ReportModal.css";
+import ReportButton from "./ReportButton";
 
 export default function ReportModal({ setShowReport }) {
 
@@ -67,11 +68,7 @@ export default function ReportModal({ setShowReport }) {
                     </button>
 
 
-                    <button
-                        className="btn btn-primary btn-sm"
-                    >
-                        🖨️ Print Report
-                    </button>
+                    <ReportButton/>
 
 
                 </div>
