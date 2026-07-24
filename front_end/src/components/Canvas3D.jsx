@@ -171,7 +171,7 @@ export default function Canvas3D({ setSelectedRegion, setPainData, painData = {}
 
             </div>
 
-            <div style={{ position: 'absolute', top: '100px', right: '1050px', zIndex: 50 }}>
+            <div style={{ position: 'absolute', top: '100px', right: '900px', zIndex: 50 }}>
                 <button 
                     style={{ 
                         background: customDotMode ? '#e63946' : '#20263d', 
