@@ -32,9 +32,13 @@ async function run() {
         if (mesh) {
             
             // If this mesh is shared (already processed by a previous node, like the Left side),
-            // we MUST clone it so the Right side can have its own independent materials!
+            // we MUST explicitly clone its primitives so the Right side can have its own independent materials!
             if (processedMeshes.has(mesh)) {
-                mesh = mesh.clone();
+                const oldMesh = mesh;
+                mesh = doc.createMesh(oldMesh.getName());
+                for (const prim of oldMesh.listPrimitives()) {
+                    mesh.addPrimitive(prim.clone());
+                }
                 node.setMesh(mesh);
             }
             processedMeshes.add(mesh);
@@ -45,6 +49,11 @@ async function run() {
                 if (mat) {
                     // Clone the material so it's unique to this node/muscle
                     const newMat = mat.clone();
+                    
+                    // Introduce a microscopic difference to prevent gltf-transform from deduplicating identical L/R materials
+                    const color = newMat.getBaseColorFactor() || [1, 1, 1, 1];
+                    color[3] = 1.0 - (Math.random() * 0.00001);
+                    newMat.setBaseColorFactor(color);
                     
                     // Assign the clinical name
                     const clinicalName = simplifyName(node.getName() || mesh.getName() || 'Unknown Muscle');
