@@ -3,6 +3,7 @@ import jsPDF from "jspdf";
 export default function ReportButton({
     patientName,
     patientAge,
+    reportDate,
     regions
 }) {
 
@@ -11,7 +12,7 @@ export default function ReportButton({
 
         const doc = new jsPDF();
 
-        const today = new Date().toLocaleDateString();
+        const today = reportDate || new Date().toLocaleDateString();
 
         let y = 20;
 

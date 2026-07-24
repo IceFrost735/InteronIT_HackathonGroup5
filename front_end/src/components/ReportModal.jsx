@@ -5,6 +5,7 @@ import ReportButton from "./ReportButton";
 export default function ReportModal({ setShowReport, painData }) {
     const [patientName, setPatientName] = useState("");
     const [patientAge, setPatientAge] = useState("");
+    const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
     
     const regions = Object.entries(painData || {});
 
@@ -24,10 +25,6 @@ export default function ReportModal({ setShowReport, painData }) {
                     {/* Patient Info Section */}
                     <div className="patient-info-section">
                         <div className="info-group">
-                            <label>Patient ID:</label>
-                            <input type="text" placeholder="ID Number" />
-                        </div>
-                        <div className="info-group">
                             <label>Patient Name:</label>
                             <input type="text" value={patientName} onChange={e => setPatientName(e.target.value)} placeholder="Full Name" />
                         </div>
@@ -37,7 +34,7 @@ export default function ReportModal({ setShowReport, painData }) {
                         </div>
                         <div className="info-group">
                             <label>Date:</label>
-                            <input type="date" defaultValue={new Date().toISOString().split('T')[0]} />
+                            <input type="date" value={reportDate} onChange={e => setReportDate(e.target.value)} />
                         </div>
                     </div>
 
@@ -91,6 +88,7 @@ export default function ReportModal({ setShowReport, painData }) {
                     <ReportButton
                         patientName={patientName}
                         patientAge={patientAge}
+                        reportDate={reportDate}
                         regions={regions}
                     />
                 </div>
