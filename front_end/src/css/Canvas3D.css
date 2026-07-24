@@ -1,0 +1,61 @@
+.canvas-container {
+
+height:100vh;
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+position:relative;
+
+}
+
+
+.three-container {
+
+width:100%;
+height:100%;
+
+}
+
+
+
+.view-controls {
+
+position:absolute;
+
+top:90px;
+
+display:flex;
+
+gap:10px;
+
+z-index:5;
+
+}
+
+
+
+.view-controls button {
+
+background:#20263d;
+
+color:white;
+
+border:none;
+
+padding:8px 15px;
+
+border-radius:10px;
+
+}
+
+
+
+.view-controls button:hover {
+
+background:#6d5dfc;
+
+}

@@ -1,0 +1,83 @@
+.report-overlay {
+
+position:fixed;
+
+inset:0;
+
+background:rgba(0,0,0,.6);
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+z-index:20;
+
+}
+
+
+
+.report-modal {
+
+width:600px;
+
+background:#151a2d;
+
+border-radius:20px;
+
+overflow:hidden;
+
+}
+
+
+
+.report-modal-header {
+
+display:flex;
+
+justify-content:space-between;
+
+padding:20px;
+
+border-bottom:1px solid rgba(255,255,255,.1);
+
+}
+
+
+
+.report-close-btn {
+
+background:none;
+
+border:none;
+
+color:white;
+
+font-size:20px;
+
+}
+
+
+
+.report-modal-body {
+
+padding:20px;
+
+min-height:200px;
+
+}
+
+
+
+.report-modal-footer {
+
+padding:20px;
+
+display:flex;
+
+justify-content:flex-end;
+
+gap:10px;
+
+}   
