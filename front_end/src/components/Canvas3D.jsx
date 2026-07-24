@@ -16,22 +16,51 @@ export default function Canvas3D({ setSelectedRegion, setPainData, painData = {}
 
     // Synchronize materials with painData
     useEffect(() => {
-        if (viewerRef.current && viewerRef.current.model) {
-            const materials = viewerRef.current.model.materials;
-            for (const material of materials) {
-                if (!originalColors.current[material.name]) {
-                    originalColors.current[material.name] = material.pbrMetallicRoughness.baseColorFactor.slice();
-                }
-                const pain = painData[material.name];
-                if (pain) {
-                    let color = [1, 0.2, 0.2, 1]; // Default Red
-                    if (pain.severity <= 3) color = [0.3, 0.8, 0.3, 1]; // Green
-                    else if (pain.severity <= 6) color = [1, 0.6, 0, 1]; // Orange
-                    material.pbrMetallicRoughness.setBaseColorFactor(color);
-                } else if (hoveredMaterial.current !== material.name) {
-                    material.pbrMetallicRoughness.setBaseColorFactor(originalColors.current[material.name]);
+        try {
+            if (viewerRef.current && viewerRef.current.model) {
+                const materials = viewerRef.current.model.materials;
+                for (const material of materials) {
+                    try {
+                        // Accessing pbrMetallicRoughness can throw if the material isn't fully loaded by model-viewer
+                        const pbr = material.pbrMetallicRoughness;
+                        if (!pbr) continue;
+
+                        // Hide and ignore Fascia and non-muscle tissues that block the view
+                        if (['Fascia', 'Bursa', 'Cartilage'].includes(material.name)) {
+                            pbr.setBaseColorFactor([0, 0, 0, 0]);
+                            if (typeof material.setAlphaMode === 'function') material.setAlphaMode('MASK');
+                            if (typeof material.setAlphaCutoff === 'function') material.setAlphaCutoff(1.0);
+                            continue;
+                        }
+
+                        if (!originalColors.current[material.name]) {
+                            originalColors.current[material.name] = pbr.baseColorFactor.slice();
+                        }
+
+                        let targetColor = originalColors.current[material.name];
+                        
+                        const pain = painData[material.name];
+                        if (pain) {
+                            targetColor = [1, 0.2, 0.2, 1]; // Default Red
+                            if (pain.severity <= 3) targetColor = [0.3, 0.8, 0.3, 1]; // Green
+                            else if (pain.severity <= 6) targetColor = [1, 0.6, 0, 1]; // Orange
+                        } else if (hoveredMaterial.current === material.name) {
+                            targetColor = [0.3, 0.6, 1.0, 1]; // Hover glow
+                        }
+
+                        // ONLY update WebGL if the color actually changed (prevents browser freezing)
+                        const currentColor = pbr.baseColorFactor;
+                        if (!currentColor || targetColor[0] !== currentColor[0] || targetColor[1] !== currentColor[1] || targetColor[2] !== currentColor[2] || targetColor[3] !== currentColor[3]) {
+                            pbr.setBaseColorFactor(targetColor);
+                        }
+                    } catch (e) {
+                        // Silently skip materials that haven't finished lazy-loading in WebGL yet
+                        continue;
+                    }
                 }
             }
+        } catch (error) {
+            alert("Effect Error: " + error.message + "\n" + error.stack);
         }
     }, [painData]);
 
@@ -85,7 +114,11 @@ export default function Canvas3D({ setSelectedRegion, setPainData, painData = {}
         // Hover logic
         if (!panMode && viewerRef.current && viewerRef.current.model) {
             const material = viewerRef.current.materialFromPoint(e.clientX, e.clientY);
-            const newHover = material ? material.name : null;
+            let newHover = material ? material.name : null;
+            
+            if (['Fascia', 'Bursa', 'Cartilage'].includes(newHover)) {
+                newHover = null;
+            }
             
             if (newHover !== hoveredMaterial.current) {
                 const oldHover = hoveredMaterial.current;
@@ -95,7 +128,9 @@ export default function Canvas3D({ setSelectedRegion, setPainData, painData = {}
                 if (oldHover && !painData[oldHover]) {
                     const oldMat = viewerRef.current.model.materials.find(m => m.name === oldHover);
                     if (oldMat && originalColors.current[oldHover]) {
-                        oldMat.pbrMetallicRoughness.setBaseColorFactor(originalColors.current[oldHover]);
+                        try {
+                            oldMat.pbrMetallicRoughness.setBaseColorFactor(originalColors.current[oldHover]);
+                        } catch (e) {}
                     }
                 }
                 
@@ -103,11 +138,13 @@ export default function Canvas3D({ setSelectedRegion, setPainData, painData = {}
                 if (newHover && !painData[newHover]) {
                     const newMat = viewerRef.current.model.materials.find(m => m.name === newHover);
                     if (newMat) {
-                        if (!originalColors.current[newHover]) {
-                            originalColors.current[newHover] = newMat.pbrMetallicRoughness.baseColorFactor.slice();
-                        }
-                        // Highlight with a light blue glow
-                        newMat.pbrMetallicRoughness.setBaseColorFactor([0.3, 0.6, 1.0, 1]); 
+                        try {
+                            if (!originalColors.current[newHover]) {
+                                originalColors.current[newHover] = newMat.pbrMetallicRoughness.baseColorFactor.slice();
+                            }
+                            // Highlight with a light blue glow
+                            newMat.pbrMetallicRoughness.setBaseColorFactor([0.3, 0.6, 1.0, 1]); 
+                        } catch (e) {}
                     }
                 }
             }
@@ -120,21 +157,25 @@ export default function Canvas3D({ setSelectedRegion, setPainData, painData = {}
     };
 
     const handleCanvasClick = (e) => {
-        if (panMode) return;
-        if (!viewerRef.current) return;
-        
-        const material = viewerRef.current.materialFromPoint(e.clientX, e.clientY);
-        if (material && material.name) {
-            const name = material.name;
-            setSelectedRegion(name);
+        try {
+            if (panMode) return;
+            if (!viewerRef.current) return;
             
-            // Instantly add to list of pains with default values if it doesn't exist
-            if (setPainData && !painData[name]) {
-                setPainData(prev => ({
-                    ...prev,
-                    [name]: { severity: 5, painType: "", notes: "", startDate: "", frequency: "" }
-                }));
+            const material = viewerRef.current.materialFromPoint(e.clientX, e.clientY);
+            if (material && material.name && !['Fascia', 'Bursa', 'Cartilage'].includes(material.name)) {
+                const name = material.name;
+                setSelectedRegion(name);
+                
+                // Instantly add to list of pains with default values if it doesn't exist
+                if (setPainData && !painData[name]) {
+                    setPainData(prev => ({
+                        ...prev,
+                        [name]: { severity: 5, painType: "", notes: "", startDate: "", frequency: "" }
+                    }));
+                }
             }
+        } catch (error) {
+            alert("Click Error: " + error.message + "\n" + error.stack);
         }
     };
 
@@ -187,7 +228,7 @@ export default function Canvas3D({ setSelectedRegion, setPainData, painData = {}
                 )}
                 <model-viewer
                     ref={viewerRef}
-                    src="/models/zanatomy1.glb"
+                    src="/models/zanatomy_split.glb"
                     alt="3D muscular model"
                     camera-controls={!panMode}
                     shadow-intensity="1"
