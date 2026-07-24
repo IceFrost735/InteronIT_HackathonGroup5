@@ -72,10 +72,12 @@ export default function ReportModal({ setShowReport, painData }) {
 
                 {/* Footer */}
                 <div className="report-modal-footer">
-                    <button className="btn btn-secondary btn-sm" onClick={() => alert("PDF export coming soon!")}>
-                        ⬇️ Export PDF
-                    </button>
-                    <ReportButton/>
+
+                    <ReportButton
+                        patientName={patientName}
+                        patientAge={patientAge}
+                        regions={regions}
+                    />
                 </div>
 
             </div>

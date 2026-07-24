@@ -1,67 +1,354 @@
 import jsPDF from "jspdf";
 
-export default function ReportButton() {
+export default function ReportButton({
+    patientName,
+    patientAge,
+    regions
+}) {
 
 
     const generatePDF = () => {
 
         const doc = new jsPDF();
 
+        const today = new Date().toLocaleDateString();
+
+        let y = 20;
+
+
+        // =========================
+        // Header
+        // =========================
 
         doc.setFontSize(20);
-        doc.text("Clinical Pain Report", 70, 20);
+        doc.text("Clinical Pain Report", 105, y, {
+            align: "center"
+        });
 
 
-        doc.setFontSize(12);
+        y += 10;
 
-        doc.text("Patient Information", 20, 40);
+        doc.setFontSize(11);
+        doc.text(
+            "Comprehensive Patient Pain Assessment",
+            105,
+            y,
+            { align: "center" }
+        );
 
-        doc.text("Name: John Doe", 20, 55);
-        doc.text("Patient ID: 12345", 20, 65);
-        doc.text("Date: 07/24/2026", 20, 75);
+
+        y += 15;
+
+
+        // horizontal line
+
+        doc.line(20, y, 190, y);
+
+        y += 15;
 
 
 
-        doc.text("Pain Assessment", 20, 95);
+        // =========================
+        // Patient Information
+        // =========================
 
-        doc.text("Location: Lower Back", 20, 110);
-        doc.text("Pain Level: 7/10", 20, 120);
+        doc.setFontSize(14);
+        doc.text("1. Patient Information", 20, y);
+
+        y += 10;
+
+
+        doc.setFontSize(11);
 
         doc.text(
-            "Description: Sharp pain after movement",
+            `Patient Name: ${patientName || "Not Provided"}`,
+            25,
+            y
+        );
+
+        y += 8;
+
+
+        doc.text(
+            `Age: ${patientAge || "Not Provided"}`,
+            25,
+            y
+        );
+
+
+        y += 8;
+
+
+        doc.text(
+            `Report Date: ${today}`,
+            25,
+            y
+        );
+
+
+        y += 15;
+
+
+
+        // =========================
+        // Pain Assessment
+        // =========================
+
+
+        doc.setFontSize(14);
+
+        doc.text(
+            "2. Pain Assessment",
             20,
-            130
+            y
+        );
+
+
+        y += 10;
+
+
+
+        if(regions.length === 0){
+
+            doc.setFontSize(11);
+
+            doc.text(
+                "No pain regions recorded.",
+                25,
+                y
+            );
+
+        }
+
+        else {
+
+
+            regions.forEach(([regionName, data], index)=>{
+
+
+                // check page overflow
+
+                if(y > 260){
+
+                    doc.addPage();
+                    y = 20;
+
+                }
+
+
+
+                // Region title
+
+                doc.setFontSize(12);
+
+                doc.text(
+                    `${index + 1}. ${regionName}`,
+                    25,
+                    y
+                );
+
+
+                y += 8;
+
+
+                doc.setFontSize(11);
+
+
+
+                doc.text(
+                    `Pain Severity: ${data.severity}/10`,
+                    30,
+                    y
+                );
+
+
+                y += 7;
+
+
+
+                doc.text(
+                    `Pain Type: ${data.painType || "Not specified"}`,
+                    30,
+                    y
+                );
+
+
+                y += 7;
+
+
+
+                if(data.frequency){
+
+                    doc.text(
+                        `Frequency: ${data.frequency}`,
+                        30,
+                        y
+                    );
+
+                    y += 7;
+
+                }
+
+
+
+                if(data.startDate){
+
+                    doc.text(
+                        `Onset Date: ${data.startDate}`,
+                        30,
+                        y
+                    );
+
+                    y += 7;
+
+                }
+
+
+
+
+                if(data.notes){
+
+
+                    doc.text(
+                        "Notes:",
+                        30,
+                        y
+                    );
+
+
+                    y += 6;
+
+
+                    // wrap long notes
+
+                    const notes = doc.splitTextToSize(
+                        data.notes,
+                        150
+                    );
+
+
+                    doc.text(
+                        notes,
+                        35,
+                        y
+                    );
+
+
+                    y += notes.length * 6;
+
+                }
+
+
+
+                y += 10;
+
+
+
+                // divider
+
+                doc.line(
+                    25,
+                    y,
+                    185,
+                    y
+                );
+
+
+                y += 10;
+
+
+            });
+
+        }
+
+
+
+        // =========================
+        // Doctor Notes Section
+        // =========================
+
+
+        if(y > 240){
+
+            doc.addPage();
+            y = 20;
+
+        }
+
+
+        doc.setFontSize(14);
+
+        doc.text(
+            "3. Clinical Notes",
+            20,
+            y
+        );
+
+
+        y += 10;
+
+
+        doc.setFontSize(11);
+
+        doc.text(
+            "Additional physician observations:",
+            25,
+            y
+        );
+
+
+        y += 10;
+
+
+        doc.rect(
+            25,
+            y,
+            160,
+            40
+        );
+
+
+        y += 55;
+
+
+
+        // =========================
+        // Footer
+        // =========================
+
+
+        doc.setFontSize(9);
+
+        doc.text(
+            "Generated by Clinical Pain Assessment System",
+            105,
+            285,
+            {
+                align:"center"
+            }
         );
 
 
 
-        doc.text("Doctor Notes", 20, 160);
+        // Save
 
-        doc.text(
-            "Diagnosis: Muscle strain",
-            20,
-            175
+        doc.save(
+            "Clinical_Pain_Report.pdf"
         );
 
-        doc.text(
-            "Treatment: Physical therapy",
-            20,
-            185
-        );
-
-
-        // Download PDF
-        doc.save("Clinical_Pain_Report.pdf");
     };
 
 
 
     return (
+
         <button
             className="btn btn-primary btn-sm"
             onClick={generatePDF}
         >
             🖨️ Print Report
         </button>
+
     );
+
 }
