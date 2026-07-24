@@ -161,17 +161,25 @@ export default function Canvas3D({ setSelectedRegion, setPainData, painData = {}
             if (panMode) return;
             if (!viewerRef.current) return;
             
+            const hit = viewerRef.current.positionAndNormalFromPoint(e.clientX, e.clientY);
             const material = viewerRef.current.materialFromPoint(e.clientX, e.clientY);
             if (material && material.name && !['Fascia', 'Bursa', 'Cartilage'].includes(material.name)) {
                 const name = material.name;
                 setSelectedRegion(name);
                 
                 // Instantly add to list of pains with default values if it doesn't exist
-                if (setPainData && !painData[name]) {
-                    setPainData(prev => ({
-                        ...prev,
-                        [name]: { severity: 5, painType: "", notes: "", startDate: "", frequency: "" }
-                    }));
+                if (setPainData) {
+                    setPainData(prev => {
+                        const existing = prev[name] || { severity: 5, painType: "", notes: "", startDate: "", frequency: "" };
+                        return {
+                            ...prev,
+                            [name]: {
+                                ...existing,
+                                clickPosition: hit && hit.position ? `${hit.position.x} ${hit.position.y} ${hit.position.z}` : existing.clickPosition,
+                                clickNormal: hit && hit.normal ? `${hit.normal.x} ${hit.normal.y} ${hit.normal.z}` : existing.clickNormal
+                            }
+                        };
+                    });
                 }
             }
         } catch (error) {
@@ -236,6 +244,29 @@ export default function Canvas3D({ setSelectedRegion, setPainData, painData = {}
                     onClick={handleCanvasClick}
                     onPointerMove={!panMode ? handlePointerMove : undefined}
                 >
+                    {Object.entries(painData).map(([region, data]) => {
+                        if (data.clickPosition && data.clickNormal) {
+                            return (
+                                <button
+                                    key={region}
+                                    slot={`hotspot-${region.replace(/[^a-zA-Z0-9]/g, '')}`}
+                                    data-position={data.clickPosition}
+                                    data-normal={data.clickNormal}
+                                    style={{
+                                        backgroundColor: '#f44336',
+                                        width: '16px',
+                                        height: '16px',
+                                        borderRadius: '50%',
+                                        border: '2px solid white',
+                                        boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
+                                        transform: 'translate(-50%, -50%)',
+                                        pointerEvents: 'none'
+                                    }}
+                                ></button>
+                            );
+                        }
+                        return null;
+                    })}
                 </model-viewer>
             </div>
 

@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 export default function ReportButton({
     patientName,
@@ -8,7 +9,7 @@ export default function ReportButton({
 }) {
 
 
-    const generatePDF = () => {
+    const generatePDF = async () => {
 
         const doc = new jsPDF();
 
@@ -95,22 +96,62 @@ export default function ReportButton({
         // Pain Assessment
         // =========================
 
-
         doc.setFontSize(14);
-
-        doc.text(
-            "2. Pain Assessment",
-            20,
-            y
-        );
-
-
+        doc.text("2. Pain Assessment", 20, y);
         y += 10;
 
-
-
-        if(regions.length === 0){
-
+        // Try to capture screenshot of the 3D model
+        try {
+            const container = document.getElementById('model-viewer-container');
+            const viewer = container?.querySelector('model-viewer');
+            
+            if (viewer && container) {
+                // Get the 3D scene as an image
+                const dataUrl = viewer.toDataURL('image/png', 2.0);
+                
+                // Temporarily set it as the background to let html2canvas capture it along with the HTML hotspots
+                const originalBg = container.style.backgroundImage;
+                const originalBgSize = container.style.backgroundSize;
+                const originalBgPos = container.style.backgroundPosition;
+                const originalBgRepeat = container.style.backgroundRepeat;
+                
+                container.style.backgroundImage = `url(${dataUrl})`;
+                container.style.backgroundSize = 'contain';
+                container.style.backgroundPosition = 'center';
+                container.style.backgroundRepeat = 'no-repeat';
+                
+                // Temporarily hide the model-viewer's internal canvas if possible, though html2canvas ignores shadow DOM anyway
+                
+                const canvas = await html2canvas(container, {
+                    backgroundColor: '#f0f4f8',
+                    scale: 2 // High resolution
+                });
+                
+                // Restore
+                container.style.backgroundImage = originalBg;
+                container.style.backgroundSize = originalBgSize;
+                container.style.backgroundPosition = originalBgPos;
+                container.style.backgroundRepeat = originalBgRepeat;
+                
+                const finalImage = canvas.toDataURL('image/png');
+                
+                // Calculate dimensions to fit in PDF
+                const pdfWidth = 170; // 190 - 20
+                const imgProps = doc.getImageProperties(finalImage);
+                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                
+                if (y + pdfHeight > 260) {
+                    doc.addPage();
+                    y = 20;
+                }
+                
+                doc.addImage(finalImage, 'PNG', 20, y, pdfWidth, pdfHeight);
+                y += pdfHeight + 10;
+            }
+        } catch (error) {
+            console.error("Screenshot capture failed:", error);
+        }
+        if (regions.length === 0) {
             doc.setFontSize(11);
 
             doc.text(
