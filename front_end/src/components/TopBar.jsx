@@ -1,5 +1,11 @@
 import "../css/TopBar.css";
-export default function TopBar({setShowReport}) {
+export default function TopBar({setShowReport, setPainData}) {
+
+    const handleClearAll = () => {
+        if (window.confirm("Are you sure you want to clear all logged pain data?")) {
+            setPainData({});
+        }
+    };
 
     return (
 
@@ -32,6 +38,7 @@ export default function TopBar({setShowReport}) {
 
                 <button 
                     className="btn btn-secondary btn-sm"
+                    onClick={handleClearAll}
                 >
                     🗑️ Clear All
                 </button>

@@ -10,38 +10,25 @@ import ReportModal from "./components/ReportModal";
 export default function App() {
 
     const [selectedRegion, setSelectedRegion] = useState(null);
-
     const [showReport, setShowReport] = useState(false);
-
+    const [painData, setPainData] = useState({});
 
     return (
-
         <>
-
             <div id="app">
+                <TopBar setShowReport={setShowReport} setPainData={setPainData} />
 
-                <TopBar 
-                    setShowReport={setShowReport}
-                />
+                <LeftPanel selectedRegion={selectedRegion} painData={painData} setSelectedRegion={setSelectedRegion} setPainData={setPainData} />
 
-
-                <LeftPanel
-                    selectedRegion={selectedRegion}
-                />
-
-
-                <Canvas3D
-                    setSelectedRegion={setSelectedRegion}
-                />
-
+                <Canvas3D setSelectedRegion={setSelectedRegion} />
 
                 <RightPanel
                     selectedRegion={selectedRegion}
                     setSelectedRegion={setSelectedRegion}
                     setShowReport={setShowReport}
+                    painData={painData}
+                    setPainData={setPainData}
                 />
-
-
             </div>
 
 
@@ -49,6 +36,7 @@ export default function App() {
                 showReport &&
                 <ReportModal
                     setShowReport={setShowReport}
+                    painData={painData}
                 />
             }
 
