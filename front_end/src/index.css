@@ -20,8 +20,6 @@ button {
 
 
 #app {
-  display: grid;
-  grid-template-columns: 320px 1fr 360px;
   height: 100vh;
   overflow: hidden;
 }
