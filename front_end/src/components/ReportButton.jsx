@@ -106,32 +106,38 @@ export default function ReportButton({
             const viewer = container?.querySelector('model-viewer');
             
             if (viewer && container) {
-                // Get the 3D scene as an image
-                const dataUrl = viewer.toDataURL('image/png', 2.0);
+                // Get the 3D scene as an image using the official toBlob API
+                const blob = await viewer.toBlob({ idealAspect: true });
+                const dataUrl = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(blob);
+                });
                 
-                // Temporarily set it as the background to let html2canvas capture it along with the HTML hotspots
-                const originalBg = container.style.backgroundImage;
-                const originalBgSize = container.style.backgroundSize;
-                const originalBgPos = container.style.backgroundPosition;
-                const originalBgRepeat = container.style.backgroundRepeat;
+                // Create an image element overlay to guarantee html2canvas captures it
+                const img = new Image();
+                img.style.position = 'absolute';
+                img.style.top = '0';
+                img.style.left = '0';
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'contain';
+                img.style.zIndex = '1'; // Ensures it sits behind the red markers (which use default z-index) but covers the 3D canvas
                 
-                container.style.backgroundImage = `url(${dataUrl})`;
-                container.style.backgroundSize = 'contain';
-                container.style.backgroundPosition = 'center';
-                container.style.backgroundRepeat = 'no-repeat';
+                img.src = dataUrl;
+                await new Promise((resolve) => {
+                    img.onload = resolve;
+                });
                 
-                // Temporarily hide the model-viewer's internal canvas if possible, though html2canvas ignores shadow DOM anyway
+                container.appendChild(img);
                 
                 const canvas = await html2canvas(container, {
                     backgroundColor: '#f0f4f8',
                     scale: 2 // High resolution
                 });
                 
-                // Restore
-                container.style.backgroundImage = originalBg;
-                container.style.backgroundSize = originalBgSize;
-                container.style.backgroundPosition = originalBgPos;
-                container.style.backgroundRepeat = originalBgRepeat;
+                // Clean up
+                container.removeChild(img);
                 
                 const finalImage = canvas.toDataURL('image/png');
                 
