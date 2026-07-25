@@ -121,23 +121,23 @@ export default function ReportButton({
                 img.style.left = '0';
                 img.style.width = '100%';
                 img.style.height = '100%';
-                img.style.objectFit = 'contain';
-                img.style.zIndex = '1'; // Ensures it sits behind the red markers (which use default z-index) but covers the 3D canvas
+                img.style.objectFit = 'fill'; // Matches the viewer exactly
+                img.style.zIndex = '0'; // Behind the markers (z-index 10) but above the shadow DOM
                 
                 img.src = dataUrl;
                 await new Promise((resolve) => {
                     img.onload = resolve;
                 });
                 
-                container.appendChild(img);
+                viewer.appendChild(img);
                 
-                const canvas = await html2canvas(container, {
-                    backgroundColor: '#f0f4f8',
+                const canvas = await html2canvas(viewer, {
+                    backgroundColor: null, // Transparent to blend well
                     scale: 2 // High resolution
                 });
                 
                 // Clean up
-                container.removeChild(img);
+                viewer.removeChild(img);
                 
                 const finalImage = canvas.toDataURL('image/png');
                 

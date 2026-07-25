@@ -261,7 +261,8 @@ export default function Canvas3D({ setSelectedRegion, setPainData, painData = {}
                                         border: '2px solid white',
                                         boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
                                         transform: 'translate(-50%, -50%)',
-                                        pointerEvents: 'none'
+                                        pointerEvents: 'none',
+                                        zIndex: 10
                                     }}
                                 ></button>
                             );
