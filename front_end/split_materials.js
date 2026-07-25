@@ -50,14 +50,42 @@ async function run() {
                     // Clone the material so it's unique to this node/muscle
                     const newMat = mat.clone();
                     
-                    // Introduce a microscopic difference to prevent gltf-transform from deduplicating identical L/R materials
-                    const color = newMat.getBaseColorFactor() || [1, 1, 1, 1];
-                    color[3] = 1.0 - (Math.random() * 0.00001);
-                    newMat.setBaseColorFactor(color);
-                    
                     // Assign the clinical name
                     const clinicalName = simplifyName(node.getName() || mesh.getName() || 'Unknown Muscle');
                     newMat.setName(clinicalName);
+                    
+                    // Assign intelligent colors based on anatomy name
+                    const nameLower = clinicalName.toLowerCase();
+                    let baseColor = [0.6, 0.1, 0.1, 1.0]; // Default fleshy muscle red
+                    let roughness = 0.5;
+                    let metallic = 0.0;
+                    
+                    if (nameLower.includes('fascia') || nameLower.includes('tendon') || nameLower.includes('ligament') || nameLower.includes('aponeurosis') || nameLower.includes('linea')) {
+                        baseColor = [0.8, 0.8, 0.75, 1.0]; // Off-white/yellowish for connective tissue
+                        roughness = 0.6;
+                    } else if (nameLower.includes('cartilage') || nameLower.includes('disc')) {
+                        baseColor = [0.6, 0.7, 0.8, 1.0]; // Light bluish-white
+                        roughness = 0.3;
+                    } else if (nameLower.includes('bone') || nameLower.includes('vertebra')) {
+                        baseColor = [0.85, 0.8, 0.75, 1.0]; // Bone white
+                        roughness = 0.8;
+                    } else if (nameLower.includes('vein') || nameLower.includes('vena')) {
+                        baseColor = [0.05, 0.1, 0.6, 1.0]; // Blue
+                        roughness = 0.4;
+                    } else if (nameLower.includes('artery') || nameLower.includes('aorta')) {
+                        baseColor = [0.8, 0.05, 0.05, 1.0]; // Bright Red
+                        roughness = 0.4;
+                    } else if (nameLower.includes('nerve')) {
+                        baseColor = [0.8, 0.7, 0.1, 1.0]; // Yellow
+                        roughness = 0.5;
+                    }
+                    
+                    // Add micro variation to prevent deduplication of identical L/R materials
+                    baseColor[3] = 1.0 - (Math.random() * 0.00001);
+                    
+                    newMat.setBaseColorFactor(baseColor);
+                    newMat.setRoughnessFactor(roughness);
+                    newMat.setMetallicFactor(metallic);
                     
                     prim.setMaterial(newMat);
                     clonedCount++;
