@@ -56,15 +56,21 @@ async function run() {
                     
                     const color = newMat.getBaseColorFactor() || [1, 1, 1, 1];
                     
-                    // Only color the muscles a dark red, leave everything else (fascia, bone, etc.) alone
+                    // The user wants everything that looks like skin/muscle/fascia to be dark red.
+                    // We will color both the fascia and the muscles dark red!
                     const nameLower = clinicalName.toLowerCase();
-                    const nonMuscleTerms = ['fascia', 'aponeurosis', 'sheath', 'septum', 'retinaculum', 'tendon', 'ligament', 'linea', 'cartilage', 'disc', 'bone', 'vertebra', 'vein', 'vena', 'artery', 'aorta', 'nerve'];
-                    const isMuscle = !nonMuscleTerms.some(term => nameLower.includes(term));
+                    const boneTerms = ['bone', 'vertebra', 'cartilage', 'disc'];
+                    const isBone = boneTerms.some(term => nameLower.includes(term));
                     
-                    if (isMuscle) {
-                        color[0] = 0.22;
-                        color[1] = 0.01;
-                        color[2] = 0.01;
+                    if (!isBone) {
+                        // Dark red for Fascia, Muscles, Tendons, etc.
+                        color[0] = 0.05;
+                        color[1] = 0.005;
+                        color[2] = 0.005;
+                        
+                        // Give it a slightly glossy sheen for better highlights
+                        newMat.setRoughnessFactor(0.3);
+                        newMat.setMetallicFactor(0.0);
                     }
                     
                     // Introduce a microscopic difference to prevent gltf-transform from deduplicating identical L/R materials
