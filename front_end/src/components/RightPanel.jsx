@@ -39,7 +39,14 @@ export default function RightPanel({
     const handleSave = () => {
         setPainData(prev => ({
             ...prev,
-            [selectedRegion]: { severity, painType, notes, startDate, frequency }
+            [selectedRegion]: { 
+                ...prev[selectedRegion], // Must preserve clickPosition and clickNormal!
+                severity, 
+                painType, 
+                notes, 
+                startDate, 
+                frequency 
+            }
         }));
         setSelectedRegion(null); // Close panel on save
     };
