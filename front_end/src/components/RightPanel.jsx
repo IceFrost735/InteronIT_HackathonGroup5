@@ -4,8 +4,8 @@ import "../css/RightPanel.css";
 const PAIN_TYPES = ["Sharp", "Dull", "Aching", "Burning", "Throbbing", "Shooting", "Cramping"];
 
 export default function RightPanel({
-    selectedRegion,
-    setSelectedRegion,
+    selectedSpotId,
+    setSelectedSpotId,
     painData,
     setPainData
 }) {
@@ -16,10 +16,10 @@ export default function RightPanel({
     const [startDate, setStartDate] = useState("");
     const [frequency, setFrequency] = useState("");
 
-    // Sync local state when a new region is selected
+    // Sync local state when a new spot is selected
     useEffect(() => {
-        if (selectedRegion) {
-            const existingData = painData[selectedRegion];
+        if (selectedSpotId) {
+            const existingData = painData[selectedSpotId];
             if (existingData) {
                 setSeverity(existingData.severity);
                 setPainType(existingData.painType);
@@ -34,13 +34,13 @@ export default function RightPanel({
                 setFrequency("");
             }
         }
-    }, [selectedRegion, painData]);
+    }, [selectedSpotId, painData]);
 
     const handleSave = () => {
         setPainData(prev => ({
             ...prev,
-            [selectedRegion]: { 
-                ...prev[selectedRegion], // Must preserve clickPosition and clickNormal!
+            [selectedSpotId]: { 
+                ...prev[selectedSpotId], // Must preserve clickPosition and clickNormal!
                 severity, 
                 painType, 
                 notes, 
@@ -48,14 +48,14 @@ export default function RightPanel({
                 frequency 
             }
         }));
-        setSelectedRegion(null); // Close panel on save
+        setSelectedSpotId(null); // Close panel on save
     };
 
     const handleDelete = () => {
         const newData = { ...painData };
-        delete newData[selectedRegion];
+        delete newData[selectedSpotId];
         setPainData(newData);
-        setSelectedRegion(null);
+        setSelectedSpotId(null);
     };
 
     // Helper to color the severity number
@@ -69,7 +69,7 @@ export default function RightPanel({
 
         <aside className="glass-panel panel-right">
 
-            {!selectedRegion ? (
+            {!selectedSpotId ? (
 
                 // No region selected
                 <div className="no-selection">
@@ -88,7 +88,7 @@ export default function RightPanel({
                     <div className="detail-header">
                         <div className="region-icon">📍</div>
                         <div>
-                            <div className="region-title">{selectedRegion}</div>
+                            <div className="region-title">{painData[selectedSpotId]?.regionName || "Unknown Region"}</div>
                             <div className="region-subtitle">Describe your pain</div>
                         </div>
                     </div>

@@ -1,6 +1,6 @@
 import "../css/LeftPanel.css";
 
-export default function LeftPanel({ selectedRegion, painData = {}, setSelectedRegion, setPainData }) {
+export default function LeftPanel({ selectedSpotId, painData = {}, setSelectedSpotId, setPainData }) {
 
     const savedRegions = Object.entries(painData);
     const numRegions = savedRegions.length;
@@ -22,7 +22,7 @@ export default function LeftPanel({ selectedRegion, painData = {}, setSelectedRe
             <div className="panel-summary">
                 <div className="summary-stat">
                     <div className="stat-value">{numRegions}</div>
-                    <div className="stat-label">Regions</div>
+                    <div className="stat-label">Spots</div>
                 </div>
 
                 <div className="summary-stat">
@@ -34,11 +34,11 @@ export default function LeftPanel({ selectedRegion, painData = {}, setSelectedRe
             <div className="region-list" style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>
 
                 {numRegions > 0 ? (
-                    savedRegions.map(([regionName, data]) => (
-                        <div key={regionName} style={{ background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '8px', borderLeft: `4px solid ${data.severity <= 3 ? '#4caf50' : data.severity <= 6 ? '#ff9800' : '#f44336'}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    savedRegions.map(([spotId, data]) => (
+                        <div key={spotId} style={{ background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '8px', borderLeft: `4px solid ${data.severity <= 3 ? '#4caf50' : data.severity <= 6 ? '#ff9800' : '#f44336'}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             
                             <div>
-                                <div style={{ fontWeight: 'bold' }}>📍 {regionName}</div>
+                                <div style={{ fontWeight: 'bold' }}>📍 {data.regionName || "Unknown Region"}</div>
                                 <div style={{ fontSize: '12px', color: '#aaa', marginTop: '4px' }}>
                                     Severity: {data.severity}/10 • {data.painType || "Unspecified"}
                                 </div>
@@ -46,7 +46,7 @@ export default function LeftPanel({ selectedRegion, painData = {}, setSelectedRe
 
                             <div style={{ display: 'flex', gap: '5px' }}>
                                 <button 
-                                    onClick={() => setSelectedRegion(regionName)}
+                                    onClick={() => setSelectedSpotId(spotId)}
                                     style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer' }}
                                     title="Edit"
                                 >
@@ -54,12 +54,12 @@ export default function LeftPanel({ selectedRegion, painData = {}, setSelectedRe
                                 </button>
                                 <button 
                                     onClick={() => {
-                                        if (window.confirm(`Delete pain data for ${regionName}?`)) {
+                                        if (window.confirm(`Delete this pain spot on ${data.regionName}?`)) {
                                             const newData = { ...painData };
-                                            delete newData[regionName];
+                                            delete newData[spotId];
                                             setPainData(newData);
-                                            if (selectedRegion === regionName) {
-                                                setSelectedRegion(null);
+                                            if (selectedSpotId === spotId) {
+                                                setSelectedSpotId(null);
                                             }
                                         }
                                     }}

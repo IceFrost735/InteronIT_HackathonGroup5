@@ -9,7 +9,7 @@ import ReportModal from "./components/ReportModal";
 
 export default function App() {
 
-    const [selectedRegion, setSelectedRegion] = useState(null);
+    const [selectedSpotId, setSelectedSpotId] = useState(null);
     const [showReport, setShowReport] = useState(false);
     const [painData, setPainData] = useState({});
 
@@ -18,13 +18,13 @@ export default function App() {
             <div id="app">
                 <TopBar setShowReport={setShowReport} setPainData={setPainData} />
 
-                <LeftPanel selectedRegion={selectedRegion} painData={painData} setSelectedRegion={setSelectedRegion} setPainData={setPainData} />
+                <LeftPanel selectedSpotId={selectedSpotId} painData={painData} setSelectedSpotId={setSelectedSpotId} setPainData={setPainData} />
 
-                <Canvas3D setSelectedRegion={setSelectedRegion} setPainData={setPainData} painData={painData} />
+                <Canvas3D setSelectedSpotId={setSelectedSpotId} setPainData={setPainData} painData={painData} />
 
                 <RightPanel
-                    selectedRegion={selectedRegion}
-                    setSelectedRegion={setSelectedRegion}
+                    selectedSpotId={selectedSpotId}
+                    setSelectedSpotId={setSelectedSpotId}
                     setShowReport={setShowReport}
                     painData={painData}
                     setPainData={setPainData}

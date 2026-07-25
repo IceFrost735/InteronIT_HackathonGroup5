@@ -106,48 +106,85 @@ export default function ReportButton({
             const viewer = container?.querySelector('model-viewer');
             
             if (viewer && container) {
-                // Get the 3D scene as an image using the official toBlob API
-                const blob = await viewer.toBlob({ idealAspect: false });
-                const dataUrl = await new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result);
-                    reader.readAsDataURL(blob);
-                });
-                
-                // Temporarily set the snapshot as the background of the model-viewer
-                // This ensures it sits perfectly behind the DOM markers without z-index conflicts
-                const oldBg = viewer.style.backgroundImage;
-                const oldBgSize = viewer.style.backgroundSize;
-                const oldBgPos = viewer.style.backgroundPosition;
-                
-                viewer.style.backgroundImage = `url(${dataUrl})`;
-                viewer.style.backgroundSize = '100% 100%';
-                viewer.style.backgroundPosition = 'center';
-                
-                const canvas = await html2canvas(viewer, {
-                    backgroundColor: null,
-                    scale: 2
-                });
-                
-                // Clean up
-                viewer.style.backgroundImage = oldBg;
-                viewer.style.backgroundSize = oldBgSize;
-                viewer.style.backgroundPosition = oldBgPos;
-                
-                const finalImage = canvas.toDataURL('image/png');
-                
-                // Calculate dimensions to fit in PDF
-                const pdfWidth = 170; // 190 - 20
-                const imgProps = doc.getImageProperties(finalImage);
-                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-                
-                if (y + pdfHeight > 260) {
-                    doc.addPage();
-                    y = 20;
+                // Determine which camera angles we need to photograph
+                const requiredAngles = new Set();
+                if (regions.length === 0) {
+                    requiredAngles.add('0deg 90deg auto'); // Default front
+                } else {
+                    regions.forEach(([spotId, data]) => {
+                        if (data.clickNormal) {
+                            const [nx, ny, nz] = data.clickNormal.split(' ').map(Number);
+                            if (nz > 0.1) requiredAngles.add('0deg 90deg auto'); // Front
+                            if (nz < -0.1) requiredAngles.add('180deg 90deg auto'); // Back
+                            if (nx > 0.5) requiredAngles.add('90deg 90deg auto'); // Left
+                            if (nx < -0.5) requiredAngles.add('-90deg 90deg auto'); // Right
+                        }
+                    });
                 }
                 
-                doc.addImage(finalImage, 'PNG', 20, y, pdfWidth, pdfHeight);
-                y += pdfHeight + 10;
+                // Fallback
+                if (requiredAngles.size === 0) {
+                    requiredAngles.add('0deg 90deg auto');
+                }
+
+                // Save original orbit so we can restore it later
+                const originalOrbit = viewer.getCameraOrbit();
+                const originalOrbitStr = `${originalOrbit.theta}rad ${originalOrbit.phi}rad ${originalOrbit.radius}m`;
+
+                for (const angle of requiredAngles) {
+                    // Set the camera angle
+                    viewer.cameraOrbit = angle;
+                    viewer.jumpCameraToGoal();
+                    
+                    // Wait for the WebGL canvas to fully render the new frame
+                    await new Promise(r => setTimeout(r, 200));
+
+                    // Get the 3D scene as an image using the official toBlob API
+                    const blob = await viewer.toBlob({ idealAspect: false });
+                    const dataUrl = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.readAsDataURL(blob);
+                    });
+                    
+                    // Temporarily set the snapshot as the background of the model-viewer
+                    const oldBg = viewer.style.backgroundImage;
+                    const oldBgSize = viewer.style.backgroundSize;
+                    const oldBgPos = viewer.style.backgroundPosition;
+                    
+                    viewer.style.backgroundImage = `url(${dataUrl})`;
+                    viewer.style.backgroundSize = '100% 100%';
+                    viewer.style.backgroundPosition = 'center';
+                    
+                    const canvas = await html2canvas(viewer, {
+                        backgroundColor: null,
+                        scale: 2
+                    });
+                    
+                    // Clean up
+                    viewer.style.backgroundImage = oldBg;
+                    viewer.style.backgroundSize = oldBgSize;
+                    viewer.style.backgroundPosition = oldBgPos;
+                    
+                    const finalImage = canvas.toDataURL('image/png');
+                    
+                    // Calculate dimensions to fit in PDF
+                    const pdfWidth = 170; // 190 - 20
+                    const imgProps = doc.getImageProperties(finalImage);
+                    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                    
+                    if (y + pdfHeight > 260) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    
+                    doc.addImage(finalImage, 'PNG', 20, y, pdfWidth, pdfHeight);
+                    y += pdfHeight + 10;
+                }
+
+                // Restore original camera
+                viewer.cameraOrbit = originalOrbitStr;
+                viewer.jumpCameraToGoal();
             }
         } catch (error) {
             console.error("Screenshot capture failed:", error);
@@ -185,7 +222,7 @@ export default function ReportButton({
                 doc.setFontSize(12);
 
                 doc.text(
-                    `${index + 1}. ${regionName}`,
+                    `${index + 1}. ${data.regionName || "Unknown Region"}`,
                     25,
                     y
                 );

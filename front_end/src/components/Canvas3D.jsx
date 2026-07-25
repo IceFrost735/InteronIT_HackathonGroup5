@@ -3,7 +3,7 @@ import "@google/model-viewer";
 
 import { useEffect, useRef, useState } from "react";
 
-export default function Canvas3D({ setSelectedRegion, setPainData, painData = {} }) {
+export default function Canvas3D({ setSelectedSpotId, setPainData, painData = {} }) {
 
     const mountRef = useRef(null);
     const viewerRef = useRef(null);
@@ -33,11 +33,20 @@ export default function Canvas3D({ setSelectedRegion, setPainData, painData = {}
 
                         let targetColor = originalColors.current[material.name];
                         
-                        const pain = painData[material.name];
-                        if (pain) {
+                        // Find the max severity for this specific muscle
+                        let maxSeverity = 0;
+                        let hasPain = false;
+                        for (const spot of Object.values(painData)) {
+                            if (spot.regionName === material.name) {
+                                hasPain = true;
+                                if (spot.severity > maxSeverity) maxSeverity = spot.severity;
+                            }
+                        }
+
+                        if (hasPain) {
                             targetColor = [1, 0.2, 0.2, 1]; // Default Red
-                            if (pain.severity <= 3) targetColor = [0.3, 0.8, 0.3, 1]; // Green
-                            else if (pain.severity <= 6) targetColor = [1, 0.6, 0, 1]; // Orange
+                            if (maxSeverity <= 3) targetColor = [0.3, 0.8, 0.3, 1]; // Green
+                            else if (maxSeverity <= 6) targetColor = [1, 0.6, 0, 1]; // Orange
                         } else if (hoveredMaterial.current === material.name) {
                             targetColor = [0.3, 0.6, 1.0, 1]; // Hover glow
                         }
@@ -117,7 +126,7 @@ export default function Canvas3D({ setSelectedRegion, setPainData, painData = {}
                 hoveredMaterial.current = newHover;
                 
                 // Revert old hover if it's not currently tracked in painData
-                if (oldHover && !painData[oldHover]) {
+                if (oldHover && !Object.values(painData).some(spot => spot.regionName === oldHover)) {
                     const oldMat = viewerRef.current.model.materials.find(m => m.name === oldHover);
                     if (oldMat && originalColors.current[oldHover]) {
                         try {
@@ -127,7 +136,7 @@ export default function Canvas3D({ setSelectedRegion, setPainData, painData = {}
                 }
                 
                 // Apply new hover if it's not currently tracked in painData
-                if (newHover && !painData[newHover]) {
+                if (newHover && !Object.values(painData).some(spot => spot.regionName === newHover)) {
                     const newMat = viewerRef.current.model.materials.find(m => m.name === newHover);
                     if (newMat) {
                         try {
@@ -156,22 +165,25 @@ export default function Canvas3D({ setSelectedRegion, setPainData, painData = {}
             const hit = viewerRef.current.positionAndNormalFromPoint(e.clientX, e.clientY);
             const material = viewerRef.current.materialFromPoint(e.clientX, e.clientY);
             if (material && material.name) {
-                const name = material.name;
-                setSelectedRegion(name);
+                const regionName = material.name;
+                const spotId = crypto.randomUUID();
+                setSelectedSpotId(spotId);
                 
                 // Instantly add to list of pains with default values if it doesn't exist
                 if (setPainData) {
-                    setPainData(prev => {
-                        const existing = prev[name] || { severity: 5, painType: "", notes: "", startDate: "", frequency: "" };
-                        return {
-                            ...prev,
-                            [name]: {
-                                ...existing,
-                                clickPosition: hit && hit.position ? `${hit.position.x} ${hit.position.y} ${hit.position.z}` : existing.clickPosition,
-                                clickNormal: hit && hit.normal ? `${hit.normal.x} ${hit.normal.y} ${hit.normal.z}` : existing.clickNormal
-                            }
-                        };
-                    });
+                    setPainData(prev => ({
+                        ...prev,
+                        [spotId]: {
+                            regionName: regionName,
+                            severity: 5,
+                            painType: "",
+                            notes: "",
+                            startDate: "",
+                            frequency: "",
+                            clickPosition: hit && hit.position ? `${hit.position.x} ${hit.position.y} ${hit.position.z}` : null,
+                            clickNormal: hit && hit.normal ? `${hit.normal.x} ${hit.normal.y} ${hit.normal.z}` : null
+                        }
+                    }));
                 }
             }
         } catch (error) {
@@ -237,12 +249,12 @@ export default function Canvas3D({ setSelectedRegion, setPainData, painData = {}
                     onClick={handleCanvasClick}
                     onPointerMove={!panMode ? handlePointerMove : undefined}
                 >
-                    {Object.entries(painData).map(([region, data]) => {
+                    {Object.entries(painData).map(([spotId, data]) => {
                         if (data.clickPosition && data.clickNormal) {
                             return (
                                 <button
-                                    key={region}
-                                    slot={`hotspot-${region.replace(/[^a-zA-Z0-9]/g, '')}`}
+                                    key={spotId}
+                                    slot={`hotspot-${spotId}`}
                                     data-position={data.clickPosition}
                                     data-normal={data.clickNormal}
                                     style={{
