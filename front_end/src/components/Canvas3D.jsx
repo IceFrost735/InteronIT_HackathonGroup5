@@ -221,6 +221,7 @@ export default function Canvas3D({ setSelectedRegion, setPainData, painData = {}
             </div>
 
             <div
+                id="model-viewer-container"
                 ref={mountRef}
                 className="three-container"
                 style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', paddingTop: '120px', paddingBottom: '60px', boxSizing: 'border-box', position: 'relative' }}
