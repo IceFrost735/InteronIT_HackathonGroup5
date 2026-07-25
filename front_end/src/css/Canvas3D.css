@@ -78,3 +78,11 @@
     opacity: 1;
 }
 
+button[slot^="hotspot-"][data-visibility-attribute="visible"] {
+    transition: opacity 0.2s, background-color 0.2s;
+}
+
+button[slot^="hotspot-"][data-visibility-attribute="visible"]:not([data-visible]) {
+    opacity: 0;
+    pointer-events: none;
+}

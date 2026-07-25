@@ -1,6 +1,6 @@
 import "../css/LeftPanel.css";
 
-export default function LeftPanel({ selectedSpotId, painData = {}, setSelectedSpotId, setPainData }) {
+export default function LeftPanel({ selectedRegion, painData = {}, setSelectedRegion, setPainData }) {
 
     const savedRegions = Object.entries(painData);
     const numRegions = savedRegions.length;
@@ -46,7 +46,7 @@ export default function LeftPanel({ selectedSpotId, painData = {}, setSelectedSp
 
                             <div style={{ display: 'flex', gap: '5px' }}>
                                 <button 
-                                    onClick={() => setSelectedSpotId(spotId)}
+                                    onClick={() => setSelectedRegion(spotId)}
                                     style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer' }}
                                     title="Edit"
                                 >
@@ -58,8 +58,8 @@ export default function LeftPanel({ selectedSpotId, painData = {}, setSelectedSp
                                             const newData = { ...painData };
                                             delete newData[spotId];
                                             setPainData(newData);
-                                            if (selectedSpotId === spotId) {
-                                                setSelectedSpotId(null);
+                                            if (selectedRegion === spotId) {
+                                                setSelectedRegion(null);
                                             }
                                         }
                                     }}

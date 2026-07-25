@@ -218,68 +218,104 @@ export default function ReportButton({
 
       try {
         const container = document.getElementById("model-viewer-container");
-
         const viewer = container?.querySelector("model-viewer");
 
         if (viewer && container) {
-          const dataUrl = viewer.toDataURL("image/png", 2.0);
+          const originalOrbit = viewer.cameraOrbit;
 
-          const originalBackgroundImage = container.style.backgroundImage;
+          const requiredViews = new Set();
+          if (Array.isArray(regions)) {
+            regions.forEach(([_spotId, data]) => {
+              if (data.clickNormal) {
+                const parts = data.clickNormal.split(" ");
+                if (parts.length >= 3) {
+                  const nx = parseFloat(parts[0]);
+                  const nz = parseFloat(parts[2]);
 
-          const originalBackgroundSize = container.style.backgroundSize;
-
-          const originalBackgroundPosition = container.style.backgroundPosition;
-
-          const originalBackgroundRepeat = container.style.backgroundRepeat;
-
-          try {
-            container.style.backgroundImage = `url(${dataUrl})`;
-
-            container.style.backgroundSize = "contain";
-            container.style.backgroundPosition = "center";
-            container.style.backgroundRepeat = "no-repeat";
-
-            const canvas = await html2canvas(container, {
-              backgroundColor: "#f0f4f8",
-              scale: 2,
+                  if (nz >= 0.4) requiredViews.add("Front");
+                  if (nz <= -0.4) requiredViews.add("Back");
+                  if (nx >= 0.4) requiredViews.add("Left");
+                  if (nx <= -0.4) requiredViews.add("Right");
+                }
+              }
             });
-
-            const finalImage = canvas.toDataURL("image/png");
-
-            const pdfWidth = 170;
-
-            const imageProperties = doc.getImageProperties(finalImage);
-
-            let pdfHeight =
-              (imageProperties.height * pdfWidth) / imageProperties.width;
-
-            const maximumImageHeight = 180;
-
-            if (pdfHeight > maximumImageHeight) {
-              pdfHeight = maximumImageHeight;
-            }
-
-            ensureSpace(pdfHeight + 10);
-
-            doc.addImage(finalImage, "PNG", 20, y, pdfWidth, pdfHeight);
-
-            y += pdfHeight + 10;
-          } finally {
-            // Restore the original page styling.
-            container.style.backgroundImage = originalBackgroundImage;
-
-            container.style.backgroundSize = originalBackgroundSize;
-
-            container.style.backgroundPosition = originalBackgroundPosition;
-
-            container.style.backgroundRepeat = originalBackgroundRepeat;
           }
+          if (requiredViews.size === 0) {
+            requiredViews.add("Front");
+          }
+
+          const viewsToTake = Array.from(requiredViews);
+          const viewAngles = {
+            "Front": "0deg 90deg auto",
+            "Back": "180deg 90deg auto",
+            "Left": "90deg 90deg auto",
+            "Right": "-90deg 90deg auto"
+          };
+
+          for (const viewName of viewsToTake) {
+            viewer.cameraOrbit = viewAngles[viewName];
+            if (typeof viewer.jumpCameraToGoal === 'function') {
+              viewer.jumpCameraToGoal();
+            }
+            
+            // Wait for WebGL to render the new angle
+            await new Promise((resolve) => setTimeout(resolve, 150));
+
+            const dataUrl = viewer.toDataURL("image/png", 2.0);
+
+            const originalBackgroundImage = container.style.backgroundImage;
+            const originalBackgroundSize = container.style.backgroundSize;
+            const originalBackgroundPosition = container.style.backgroundPosition;
+            const originalBackgroundRepeat = container.style.backgroundRepeat;
+
+            try {
+              container.style.backgroundImage = `url(${dataUrl})`;
+              container.style.backgroundSize = "contain";
+              container.style.backgroundPosition = "center";
+              container.style.backgroundRepeat = "no-repeat";
+
+              const canvas = await html2canvas(container, {
+                backgroundColor: "#f0f4f8",
+                scale: 2,
+              });
+
+              const finalImage = canvas.toDataURL("image/png");
+
+              const pdfWidth = 170;
+              const imageProperties = doc.getImageProperties(finalImage);
+              let pdfHeight =
+                (imageProperties.height * pdfWidth) / imageProperties.width;
+
+              const maximumImageHeight = 150; // Slightly smaller to fit multiple better
+              if (pdfHeight > maximumImageHeight) {
+                pdfHeight = maximumImageHeight;
+              }
+
+              addSubheading(`${viewName} View`);
+              ensureSpace(pdfHeight + 10);
+
+              doc.addImage(finalImage, "PNG", 20, y, pdfWidth, pdfHeight);
+              y += pdfHeight + 10;
+            } finally {
+              // Restore the original page styling.
+              container.style.backgroundImage = originalBackgroundImage;
+              container.style.backgroundSize = originalBackgroundSize;
+              container.style.backgroundPosition = originalBackgroundPosition;
+              container.style.backgroundRepeat = originalBackgroundRepeat;
+            }
+          }
+
+          // Restore original camera state
+          viewer.cameraOrbit = originalOrbit;
+          if (typeof viewer.jumpCameraToGoal === 'function') {
+            viewer.jumpCameraToGoal();
+          }
+
         } else {
           addWrappedText("A 3D pain-location image was not available.");
         }
       } catch (error) {
         console.error("Screenshot capture failed:", error);
-
         addWrappedText("The 3D pain-location image could not be captured.");
       }
 

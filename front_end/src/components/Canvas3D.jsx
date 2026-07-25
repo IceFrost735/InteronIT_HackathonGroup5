@@ -322,6 +322,7 @@ export default function Canvas3D({
                   slot={`hotspot-${spotId}`}
                   data-position={data.clickPosition}
                   data-normal={data.clickNormal}
+                  data-visibility-attribute="visible"
                   style={{
                     backgroundColor: "#f44336",
                     width: "16px",
