@@ -1,26 +1,25 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-import os
-from dotenv import load_dotenv
+from sqlalchemy.orm import declarative_base, sessionmaker
 
-DATABASE_URL = (
-    "postgresql+psycopg2://postgres:sdajfsj123123A@"
-    "database-1.cx00uaqeg0tv.us-east-2.rds.amazonaws.com:5432/postgres"
-    "?sslmode=require"
-)
+DATABASE_URL = "sqlite:///./anatome.db"
 
 engine = create_engine(
-    DATABASE_URL
+    DATABASE_URL,
+    connect_args={"check_same_thread": False},
 )
-
 
 SessionLocal = sessionmaker(
-    bind=engine
+    autocommit=False,
+    autoflush=False,
+    bind=engine,
 )
+
+Base = declarative_base()
 
 
 def get_db():
     db = SessionLocal()
+
     try:
         yield db
     finally:

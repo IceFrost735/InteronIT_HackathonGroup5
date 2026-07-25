@@ -5,43 +5,75 @@ import LeftPanel from "./components/LeftPanel";
 import Canvas3D from "./components/Canvas3D";
 import RightPanel from "./components/RightPanel";
 import ReportModal from "./components/ReportModal";
-
+import Questionnaire from "./components/Questionnaire";
 
 export default function App() {
+  // Despite its name, this stores the generated spot ID
+  const [selectedRegion, setSelectedRegion] = useState(null);
 
-    const [selectedSpotId, setSelectedSpotId] = useState(null);
-    const [showReport, setShowReport] = useState(false);
-    const [painData, setPainData] = useState({});
+  const [showReport, setShowReport] = useState(false);
+  const [painData, setPainData] = useState({});
 
-    return (
+  const [questionnaireAnswers, setQuestionnaireAnswers] = useState(null);
+
+  const [showQuestionnaire, setShowQuestionnaire] = useState(true);
+
+  function finishQuestionnaire(answers) {
+    console.log("Saved questionnaire answers:", answers);
+
+    setQuestionnaireAnswers(answers);
+    setShowQuestionnaire(false);
+  }
+
+  const handleClearAll = () => {
+    setPainData({});
+    setSelectedRegion(null);
+  };
+
+  return (
+    <>
+      {showQuestionnaire ? (
+        <Questionnaire onFinish={finishQuestionnaire} />
+      ) : (
         <>
-            <div id="app">
-                <TopBar setShowReport={setShowReport} setPainData={setPainData} />
+          <div id="app">
+            <TopBar
+              setShowReport={setShowReport}
+              setPainData={setPainData}
+              setSelectedRegion={setSelectedRegion}
+              onClearAll={handleClearAll}
+            />
 
-                <LeftPanel selectedSpotId={selectedSpotId} painData={painData} setSelectedSpotId={setSelectedSpotId} setPainData={setPainData} />
+            <LeftPanel
+              selectedRegion={selectedRegion}
+              setSelectedRegion={setSelectedRegion}
+              painData={painData}
+              setPainData={setPainData}
+            />
 
-                <Canvas3D setSelectedSpotId={setSelectedSpotId} setPainData={setPainData} painData={painData} />
+            <Canvas3D
+              setSelectedRegion={setSelectedRegion}
+              setPainData={setPainData}
+              painData={painData}
+            />
 
-                <RightPanel
-                    selectedSpotId={selectedSpotId}
-                    setSelectedSpotId={setSelectedSpotId}
-                    setShowReport={setShowReport}
-                    painData={painData}
-                    setPainData={setPainData}
-                />
-            </div>
+            <RightPanel
+              selectedRegion={selectedRegion}
+              setSelectedRegion={setSelectedRegion}
+              painData={painData}
+              setPainData={setPainData}
+            />
+          </div>
 
-
-            {
-                showReport &&
-                <ReportModal
-                    setShowReport={setShowReport}
-                    painData={painData}
-                />
-            }
-
-
+          {showReport && (
+            <ReportModal
+              setShowReport={setShowReport}
+              painData={painData}
+              questionnaireAnswers={questionnaireAnswers}
+            />
+          )}
         </>
-
-    );
+      )}
+    </>
+  );
 }
