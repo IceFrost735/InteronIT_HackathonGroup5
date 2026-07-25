@@ -28,6 +28,14 @@ async function run() {
     
     // Iterate over all nodes in the scene
     for (const node of root.listNodes()) {
+        const nodeNameLower = (node.getName() || '').toLowerCase();
+        
+        // Remove connective tissue sheaths that completely wrap the body and hide the muscles
+        if (nodeNameLower.includes('fascia') || nodeNameLower.includes('aponeurosis') || nodeNameLower.includes('sheath') || nodeNameLower.includes('septum') || nodeNameLower.includes('retinaculum')) {
+            node.dispose();
+            continue;
+        }
+
         let mesh = node.getMesh();
         if (mesh) {
             
@@ -60,11 +68,7 @@ async function run() {
                     let roughness = 0.25; // Shiny to create a specular edge "outline" effect
                     let metallic = 0.1;
                     
-                    if (nameLower.includes('fascia') || nameLower.includes('aponeurosis') || nameLower.includes('sheath')) {
-                        baseColor = [0.85, 0.85, 0.8, 0.05]; // Almost invisible so muscles are completely clear
-                        roughness = 0.7;
-                        newMat.setAlphaMode('BLEND');
-                    } else if (nameLower.includes('tendon') || nameLower.includes('ligament') || nameLower.includes('linea')) {
+                    if (nameLower.includes('tendon') || nameLower.includes('ligament') || nameLower.includes('linea')) {
                         baseColor = [0.7, 0.7, 0.65, 1.0]; // Solid off-white for tendons
                         roughness = 0.6;
                     } else if (nameLower.includes('cartilage') || nameLower.includes('disc')) {
@@ -84,7 +88,7 @@ async function run() {
                         roughness = 0.5;
                     } else {
                         // Muscles - Darker red with shiny outline effect
-                        baseColor = [0.08, 0.01, 0.01, 1.0];
+                        baseColor = [0.03, 0.005, 0.005, 1.0]; // Even darker so the edge highlights pop more
                         roughness = 0.25;
                     }
                     
