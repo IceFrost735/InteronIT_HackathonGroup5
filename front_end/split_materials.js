@@ -71,6 +71,13 @@ async function run() {
                         // Give it a slightly glossy sheen for better highlights
                         newMat.setRoughnessFactor(0.3);
                         newMat.setMetallicFactor(0.0);
+                    } else {
+                        // Darkish gray for Bones, Cartilage, etc. so it isn't blinding
+                        color[0] = 0.15;
+                        color[1] = 0.15;
+                        color[2] = 0.15;
+                        newMat.setRoughnessFactor(0.6);
+                        newMat.setMetallicFactor(0.0);
                     }
                     
                     // Introduce a microscopic difference to prevent gltf-transform from deduplicating identical L/R materials
