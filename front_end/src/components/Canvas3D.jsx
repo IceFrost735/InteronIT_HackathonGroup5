@@ -25,13 +25,7 @@ export default function Canvas3D({ setSelectedRegion, setPainData, painData = {}
                         const pbr = material.pbrMetallicRoughness;
                         if (!pbr) continue;
 
-                        // Hide and ignore Fascia and non-muscle tissues that block the view
-                        if (['Fascia', 'Bursa', 'Cartilage'].includes(material.name)) {
-                            pbr.setBaseColorFactor([0, 0, 0, 0]);
-                            if (typeof material.setAlphaMode === 'function') material.setAlphaMode('MASK');
-                            if (typeof material.setAlphaCutoff === 'function') material.setAlphaCutoff(1.0);
-                            continue;
-                        }
+                        // (Removed force-hide logic for Fascia/Cartilage because we want to see the dark red/gray colors)
 
                         if (!originalColors.current[material.name]) {
                             originalColors.current[material.name] = pbr.baseColorFactor.slice();
@@ -116,9 +110,7 @@ export default function Canvas3D({ setSelectedRegion, setPainData, painData = {}
             const material = viewerRef.current.materialFromPoint(e.clientX, e.clientY);
             let newHover = material ? material.name : null;
             
-            if (['Fascia', 'Bursa', 'Cartilage'].includes(newHover)) {
-                newHover = null;
-            }
+            // (Removed hover-blocking for Fascia/Cartilage so the user can click them if they want)
             
             if (newHover !== hoveredMaterial.current) {
                 const oldHover = hoveredMaterial.current;
@@ -163,7 +155,7 @@ export default function Canvas3D({ setSelectedRegion, setPainData, painData = {}
             
             const hit = viewerRef.current.positionAndNormalFromPoint(e.clientX, e.clientY);
             const material = viewerRef.current.materialFromPoint(e.clientX, e.clientY);
-            if (material && material.name && !['Fascia', 'Bursa', 'Cartilage'].includes(material.name)) {
+            if (material && material.name) {
                 const name = material.name;
                 setSelectedRegion(name);
                 

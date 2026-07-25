@@ -114,30 +114,25 @@ export default function ReportButton({
                     reader.readAsDataURL(blob);
                 });
                 
-                // Create an image element overlay to guarantee html2canvas captures it
-                const img = new Image();
-                img.style.position = 'absolute';
-                img.style.top = '0';
-                img.style.left = '0';
-                img.style.width = '100%';
-                img.style.height = '100%';
-                img.style.objectFit = 'fill'; // Matches the viewer exactly
-                img.style.zIndex = '0'; // Behind the markers (z-index 10) but above the shadow DOM
+                // Temporarily set the snapshot as the background of the model-viewer
+                // This ensures it sits perfectly behind the DOM markers without z-index conflicts
+                const oldBg = viewer.style.backgroundImage;
+                const oldBgSize = viewer.style.backgroundSize;
+                const oldBgPos = viewer.style.backgroundPosition;
                 
-                img.src = dataUrl;
-                await new Promise((resolve) => {
-                    img.onload = resolve;
-                });
-                
-                viewer.appendChild(img);
+                viewer.style.backgroundImage = `url(${dataUrl})`;
+                viewer.style.backgroundSize = '100% 100%';
+                viewer.style.backgroundPosition = 'center';
                 
                 const canvas = await html2canvas(viewer, {
-                    backgroundColor: null, // Transparent to blend well
-                    scale: 2 // High resolution
+                    backgroundColor: null,
+                    scale: 2
                 });
                 
                 // Clean up
-                viewer.removeChild(img);
+                viewer.style.backgroundImage = oldBg;
+                viewer.style.backgroundSize = oldBgSize;
+                viewer.style.backgroundPosition = oldBgPos;
                 
                 const finalImage = canvas.toDataURL('image/png');
                 
