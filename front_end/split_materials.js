@@ -28,14 +28,6 @@ async function run() {
     
     // Iterate over all nodes in the scene
     for (const node of root.listNodes()) {
-        const nodeNameLower = (node.getName() || '').toLowerCase();
-        
-        // Remove connective tissue sheaths that completely wrap the body and hide the muscles
-        if (nodeNameLower.includes('fascia') || nodeNameLower.includes('aponeurosis') || nodeNameLower.includes('sheath') || nodeNameLower.includes('septum') || nodeNameLower.includes('retinaculum')) {
-            node.dispose();
-            continue;
-        }
-
         let mesh = node.getMesh();
         if (mesh) {
             
@@ -58,46 +50,14 @@ async function run() {
                     // Clone the material so it's unique to this node/muscle
                     const newMat = mat.clone();
                     
+                    // Introduce a microscopic difference to prevent gltf-transform from deduplicating identical L/R materials
+                    const color = newMat.getBaseColorFactor() || [1, 1, 1, 1];
+                    color[3] = 1.0 - (Math.random() * 0.00001);
+                    newMat.setBaseColorFactor(color);
+                    
                     // Assign the clinical name
                     const clinicalName = simplifyName(node.getName() || mesh.getName() || 'Unknown Muscle');
                     newMat.setName(clinicalName);
-                    
-                    // Assign intelligent colors based on anatomy name
-                    const nameLower = clinicalName.toLowerCase();
-                    let baseColor = [0.08, 0.01, 0.01, 1.0]; // Darker red for muscles
-                    let roughness = 0.25; // Shiny to create a specular edge "outline" effect
-                    let metallic = 0.1;
-                    
-                    if (nameLower.includes('tendon') || nameLower.includes('ligament') || nameLower.includes('linea')) {
-                        baseColor = [0.7, 0.7, 0.65, 1.0]; // Solid off-white for tendons
-                        roughness = 0.6;
-                    } else if (nameLower.includes('cartilage') || nameLower.includes('disc')) {
-                        baseColor = [0.5, 0.6, 0.7, 1.0]; // Light bluish-white
-                        roughness = 0.3;
-                    } else if (nameLower.includes('bone') || nameLower.includes('vertebra')) {
-                        baseColor = [0.75, 0.7, 0.65, 1.0]; // Bone ivory
-                        roughness = 0.8;
-                    } else if (nameLower.includes('vein') || nameLower.includes('vena')) {
-                        baseColor = [0.01, 0.02, 0.25, 1.0]; // Deep Blue
-                        roughness = 0.4;
-                    } else if (nameLower.includes('artery') || nameLower.includes('aorta')) {
-                        baseColor = [0.4, 0.01, 0.01, 1.0]; // Bright Red
-                        roughness = 0.4;
-                    } else if (nameLower.includes('nerve')) {
-                        baseColor = [0.5, 0.4, 0.02, 1.0]; // Bright Yellow
-                        roughness = 0.5;
-                    } else {
-                        // Muscles - Darker red with shiny outline effect
-                        baseColor = [0.03, 0.005, 0.005, 1.0]; // Even darker so the edge highlights pop more
-                        roughness = 0.25;
-                    }
-                    
-                    // Add micro variation to prevent deduplication of identical L/R materials without destroying alpha
-                    baseColor[3] = baseColor[3] - (Math.random() * 0.00001);
-                    
-                    newMat.setBaseColorFactor(baseColor);
-                    newMat.setRoughnessFactor(roughness);
-                    newMat.setMetallicFactor(metallic);
                     
                     prim.setMaterial(newMat);
                     clonedCount++;
