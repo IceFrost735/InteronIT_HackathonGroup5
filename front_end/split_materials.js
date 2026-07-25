@@ -56,12 +56,12 @@ async function run() {
                     
                     // Assign intelligent colors based on anatomy name
                     const nameLower = clinicalName.toLowerCase();
-                    let baseColor = [0.25, 0.02, 0.02, 1.0]; // Default fleshy muscle red
-                    let roughness = 0.5;
-                    let metallic = 0.0;
+                    let baseColor = [0.08, 0.01, 0.01, 1.0]; // Darker red for muscles
+                    let roughness = 0.25; // Shiny to create a specular edge "outline" effect
+                    let metallic = 0.1;
                     
                     if (nameLower.includes('fascia') || nameLower.includes('aponeurosis') || nameLower.includes('sheath')) {
-                        baseColor = [0.85, 0.85, 0.8, 0.2]; // Highly transparent off-white
+                        baseColor = [0.85, 0.85, 0.8, 0.05]; // Almost invisible so muscles are completely clear
                         roughness = 0.7;
                         newMat.setAlphaMode('BLEND');
                     } else if (nameLower.includes('tendon') || nameLower.includes('ligament') || nameLower.includes('linea')) {
@@ -83,13 +83,13 @@ async function run() {
                         baseColor = [0.5, 0.4, 0.02, 1.0]; // Bright Yellow
                         roughness = 0.5;
                     } else {
-                        // Muscles - Deep rich red in linear space
-                        baseColor = [0.25, 0.02, 0.02, 1.0];
-                        roughness = 0.5;
+                        // Muscles - Darker red with shiny outline effect
+                        baseColor = [0.08, 0.01, 0.01, 1.0];
+                        roughness = 0.25;
                     }
                     
-                    // Add micro variation to prevent deduplication of identical L/R materials
-                    baseColor[3] = 1.0 - (Math.random() * 0.00001);
+                    // Add micro variation to prevent deduplication of identical L/R materials without destroying alpha
+                    baseColor[3] = baseColor[3] - (Math.random() * 0.00001);
                     
                     newMat.setBaseColorFactor(baseColor);
                     newMat.setRoughnessFactor(roughness);

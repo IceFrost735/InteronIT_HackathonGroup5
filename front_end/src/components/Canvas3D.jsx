@@ -237,7 +237,7 @@ export default function Canvas3D({ setSelectedRegion, setPainData, painData = {}
                 )}
                 <model-viewer
                     ref={viewerRef}
-                    src="/models/zanatomy_split.glb?v=3"
+                    src="/models/zanatomy_split.glb?v=4"
                     alt="3D muscular model"
                     camera-controls={!panMode}
                     shadow-intensity="1"
