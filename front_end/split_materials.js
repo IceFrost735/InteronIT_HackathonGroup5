@@ -56,27 +56,35 @@ async function run() {
                     
                     // Assign intelligent colors based on anatomy name
                     const nameLower = clinicalName.toLowerCase();
-                    let baseColor = [0.6, 0.1, 0.1, 1.0]; // Default fleshy muscle red
+                    let baseColor = [0.25, 0.02, 0.02, 1.0]; // Default fleshy muscle red
                     let roughness = 0.5;
                     let metallic = 0.0;
                     
-                    if (nameLower.includes('fascia') || nameLower.includes('tendon') || nameLower.includes('ligament') || nameLower.includes('aponeurosis') || nameLower.includes('linea')) {
-                        baseColor = [0.8, 0.8, 0.75, 1.0]; // Off-white/yellowish for connective tissue
+                    if (nameLower.includes('fascia') || nameLower.includes('aponeurosis') || nameLower.includes('sheath')) {
+                        baseColor = [0.85, 0.85, 0.8, 0.2]; // Highly transparent off-white
+                        roughness = 0.7;
+                        newMat.setAlphaMode('BLEND');
+                    } else if (nameLower.includes('tendon') || nameLower.includes('ligament') || nameLower.includes('linea')) {
+                        baseColor = [0.7, 0.7, 0.65, 1.0]; // Solid off-white for tendons
                         roughness = 0.6;
                     } else if (nameLower.includes('cartilage') || nameLower.includes('disc')) {
-                        baseColor = [0.6, 0.7, 0.8, 1.0]; // Light bluish-white
+                        baseColor = [0.5, 0.6, 0.7, 1.0]; // Light bluish-white
                         roughness = 0.3;
                     } else if (nameLower.includes('bone') || nameLower.includes('vertebra')) {
-                        baseColor = [0.85, 0.8, 0.75, 1.0]; // Bone white
+                        baseColor = [0.75, 0.7, 0.65, 1.0]; // Bone ivory
                         roughness = 0.8;
                     } else if (nameLower.includes('vein') || nameLower.includes('vena')) {
-                        baseColor = [0.05, 0.1, 0.6, 1.0]; // Blue
+                        baseColor = [0.01, 0.02, 0.25, 1.0]; // Deep Blue
                         roughness = 0.4;
                     } else if (nameLower.includes('artery') || nameLower.includes('aorta')) {
-                        baseColor = [0.8, 0.05, 0.05, 1.0]; // Bright Red
+                        baseColor = [0.4, 0.01, 0.01, 1.0]; // Bright Red
                         roughness = 0.4;
                     } else if (nameLower.includes('nerve')) {
-                        baseColor = [0.8, 0.7, 0.1, 1.0]; // Yellow
+                        baseColor = [0.5, 0.4, 0.02, 1.0]; // Bright Yellow
+                        roughness = 0.5;
+                    } else {
+                        // Muscles - Deep rich red in linear space
+                        baseColor = [0.25, 0.02, 0.02, 1.0];
                         roughness = 0.5;
                     }
                     
