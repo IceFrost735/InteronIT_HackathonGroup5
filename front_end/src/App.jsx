@@ -6,6 +6,7 @@ import Canvas3D from "./components/Canvas3D";
 import RightPanel from "./components/RightPanel";
 import ReportModal from "./components/ReportModal";
 import Questionnaire from "./components/Questionnaire";
+import LandingPage from "./components/LandingPage";
 
 export default function App() {
   // Despite its name, this stores the generated spot ID
@@ -16,13 +17,14 @@ export default function App() {
 
   const [questionnaireAnswers, setQuestionnaireAnswers] = useState(null);
 
-  const [showQuestionnaire, setShowQuestionnaire] = useState(true);
+  // "landing", "questionnaire", "app"
+  const [appState, setAppState] = useState("landing");
 
   function finishQuestionnaire(answers) {
     console.log("Saved questionnaire answers:", answers);
 
     setQuestionnaireAnswers(answers);
-    setShowQuestionnaire(false);
+    setAppState("app");
   }
 
   const handleClearAll = () => {
@@ -32,9 +34,15 @@ export default function App() {
 
   return (
     <>
-      {showQuestionnaire ? (
+      {appState === "landing" && (
+        <LandingPage onBegin={() => setAppState("questionnaire")} />
+      )}
+
+      {appState === "questionnaire" && (
         <Questionnaire onFinish={finishQuestionnaire} />
-      ) : (
+      )}
+
+      {appState === "app" && (
         <>
           <div id="app">
             <TopBar
