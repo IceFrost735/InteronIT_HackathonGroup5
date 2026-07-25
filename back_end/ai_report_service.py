@@ -20,7 +20,7 @@ OPENAI_REPORT_MODEL = os.getenv(
 
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
-    api_key=OPENROUTER_API_KEY,
+    api_key=OPENROUTER_API_KEY or "dummy_key",
 )
 
 
