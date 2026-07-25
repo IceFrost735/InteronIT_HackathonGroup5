@@ -50,14 +50,26 @@ async function run() {
                     // Clone the material so it's unique to this node/muscle
                     const newMat = mat.clone();
                     
-                    // Introduce a microscopic difference to prevent gltf-transform from deduplicating identical L/R materials
-                    const color = newMat.getBaseColorFactor() || [1, 1, 1, 1];
-                    color[3] = 1.0 - (Math.random() * 0.00001);
-                    newMat.setBaseColorFactor(color);
-                    
                     // Assign the clinical name
                     const clinicalName = simplifyName(node.getName() || mesh.getName() || 'Unknown Muscle');
                     newMat.setName(clinicalName);
+                    
+                    const color = newMat.getBaseColorFactor() || [1, 1, 1, 1];
+                    
+                    // Only color the muscles a dark red, leave everything else (fascia, bone, etc.) alone
+                    const nameLower = clinicalName.toLowerCase();
+                    const nonMuscleTerms = ['fascia', 'aponeurosis', 'sheath', 'septum', 'retinaculum', 'tendon', 'ligament', 'linea', 'cartilage', 'disc', 'bone', 'vertebra', 'vein', 'vena', 'artery', 'aorta', 'nerve'];
+                    const isMuscle = !nonMuscleTerms.some(term => nameLower.includes(term));
+                    
+                    if (isMuscle) {
+                        color[0] = 0.22;
+                        color[1] = 0.01;
+                        color[2] = 0.01;
+                    }
+                    
+                    // Introduce a microscopic difference to prevent gltf-transform from deduplicating identical L/R materials
+                    color[3] = color[3] - (Math.random() * 0.00001);
+                    newMat.setBaseColorFactor(color);
                     
                     prim.setMaterial(newMat);
                     clonedCount++;
