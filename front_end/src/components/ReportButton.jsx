@@ -107,7 +107,7 @@ export default function ReportButton({
             
             if (viewer && container) {
                 // Get the 3D scene as an image using the official toBlob API
-                const blob = await viewer.toBlob({ idealAspect: true });
+                const blob = await viewer.toBlob({ idealAspect: false });
                 const dataUrl = await new Promise((resolve) => {
                     const reader = new FileReader();
                     reader.onloadend = () => resolve(reader.result);
